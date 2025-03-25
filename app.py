@@ -1,33 +1,46 @@
-from flask import Flask, request, jsonify
+from flask import Flask, render_template, request, jsonify
+import os
 import pickle
 import pandas as pd
-from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 app = Flask(__name__)
 
-# Load trained model
-model_path = "models/sales_forecast.pkl"
-with open(model_path, 'rb') as f:
-    model = pickle.load(f)
+# Path where trained models are stored
+MODEL_PATH = "models/"
+CATEGORIES = ["M01AB", "M01AE", "N02BA", "N02BE"]
 
-@app.route("/")  # This will fix the issue
+# Load models into a dictionary
+loaded_models = {}
+for category in CATEGORIES:
+    model_file = os.path.join(MODEL_PATH, f"{category}_model.pkl")
+    if os.path.exists(model_file):
+        with open(model_file, "rb") as f:
+            loaded_models[category] = pickle.load(f)
+    else:
+        print(f"⚠️ Warning: Model for {category} not found!")
+
+@app.route("/")
 def home():
-    return "Welcome to the Medicine Sales Prediction API! Use the /predict endpoint to get predictions."
+    """Render the HTML page."""
+    return render_template("index.html", categories=CATEGORIES)
 
-@app.route("/predict", methods=["GET", "POST"])
+@app.route("/predict", methods=["POST"])
 def predict():
-    if request.method == "GET":
-        return jsonify({"message": "Use a POST request to get predictions."})
+    """Handle prediction requests."""
+    category = request.form.get("category")  # Get category from dropdown
+    periods = int(request.form.get("periods", 12))  # Get forecast periods
 
-    try:
-        data = request.get_json()
-        periods = int(data.get("periods", 12))
-        forecast = model.get_forecast(steps=periods)
-        forecast_values = forecast.predicted_mean.tolist()
-        return jsonify({"forecast": forecast_values})
-    except Exception as e:
-        return jsonify({"error": str(e)})
+    if not category or category not in loaded_models:
+        return jsonify({"error": f"Model for category {category} not found!"})
 
+    # Load the model for the selected category
+    model = loaded_models[category]
+
+    # Generate forecast
+    forecast = model.get_forecast(steps=periods)
+    forecast_values = forecast.predicted_mean.tolist()
+
+    return jsonify({"category": category, "forecast": forecast_values})
 
 if __name__ == "__main__":
     app.run(debug=True)

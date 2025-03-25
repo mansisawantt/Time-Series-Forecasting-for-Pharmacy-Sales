@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Medicine Sales Prediction</title>
+</head>
+<body>
+    <h1>Medicine Sales Prediction</h1>
+    
+    <form action="/predict" method="POST">
+        <label for="category">Select Medicine Category:</label>
+        <select name="category" id="category">
+            {% for cat in categories %}
+                <option value="{{ cat }}" {% if cat == selected_category %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+        </select>
+
+        <br><br>
+
+        <label for="periods">Forecast Periods:</label>
+        <input type="number" name="periods" id="periods" value="12">
+
+        <br><br>
+
+        <button type="submit">Predict</button>
+    </form>
+
+    {% if forecast %}
+        <h2>Forecasted Sales:</h2>
+        <p>{{ forecast }}</p>
+    {% endif %}
+
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+</body>
+</html>
