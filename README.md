@@ -1,6 +1,6 @@
 # Medicine Sales Prediction
 
-## 📌 Project Overview
+##  Project Overview
 This project aims to forecast medicine sales using **SARIMA (Seasonal AutoRegressive Integrated Moving Average)** models. The models are trained on past sales data and predict future sales trends for different medicine categories.
 
 ## 📁 Project Structure
